@@ -1,0 +1,164 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FoodBridge AI</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f4f8f4;color:#19372b}
+header{background:#123d2c;color:white;padding:22px}
+header h1{margin:0;font-size:27px}
+header p{margin-bottom:0;color:#d6efdd}
+main{max-width:900px;margin:auto;padding:18px}
+.hero{background:#dff5df;padding:22px;border-radius:18px}
+h2{font-size:21px}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.card{background:white;padding:16px;border-radius:15px;box-shadow:0 3px 12px #0000000b}
+button{background:#18764a;color:white;border:0;border-radius:9px;padding:12px;font-weight:bold;cursor:pointer;margin-top:8px}
+input,select{width:100%;padding:12px;margin:7px 0;border:1px solid #ccd9ce;border-radius:8px}
+.result{background:#e7f5eb;padding:12px;border-radius:9px;margin-top:10px;white-space:pre-wrap}
+a{color:#18764a}
+footer{text-align:center;padding:20px;color:#607268}
+@media(max-width:500px){.cards{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+<h1>🥗 FoodBridge AI</h1>
+<p>Connecting surplus food with people in need</p>
+</header>
+<main>
+<section class="hero">
+<h2>Good food. Zero waste. ❤️</h2>
+<p>Discover available food, connect with donors and track deliveries.</p>
+<button onclick="findLocation()">📍 Find My Location</button>
+<div id="location" class="result">Location not detected yet.</div>
+</section>
+
+<h2>Explore Features</h2>
+<div class="cards">
+<section class="card">
+<h3>🍱 Food Availability</h3>
+<p>Explore sample food donations near you.</p>
+<select id="kind">
+<option>All food</option>
+<option>Meals</option>
+<option>Fruits</option>
+<option>Packaged food</option>
+</select>
+<button onclick="showFood()">Find Food</button>
+<div id="food" class="result">Ready to explore sample listings.</div>
+</section>
+
+<section class="card">
+<h3>📞 Contact Donor</h3>
+<p>Contact a listed food donor.</p>
+<button onclick="callDonor()">Contact Donor</button>
+<div id="contact" class="result">Sample contact workflow.</div>
+</section>
+
+<section class="card">
+<h3>🗺️ Food Map</h3>
+<p>View a map and search for nearby food.</p>
+<a href="https://www.openstreetmap.org/" target="_blank" rel="noopener">Open Map ↗</a>
+<p><small>Map opens separately. Sample listings are not live locations.</small></p>
+</section>
+
+<section class="card">
+<h3>🚚 Delivery Tracking</h3>
+<p>Demo delivery status.</p>
+<button onclick="track()">Track Delivery</button>
+<div id="tracking" class="result">Order FB101: Awaiting pickup</div>
+</section>
+
+<section class="card">
+<h3>🛡️ Food Safety Check</h3>
+<p>Check donation details before accepting.</p>
+<input id="expiry" type="date" aria-label="Expiry date">
+<select id="sealed">
+<option value="">Packaging condition</option>
+<option value="yes">Sealed / protected</option>
+<option value="no">Open / damaged</option>
+</select>
+<button onclick="safety()">Check Details</button>
+<div id="safe" class="result">No verification performed yet.</div>
+</section>
+
+<section class="card">
+<h3>🤝 Donate Food</h3>
+<p>Add a sample donation listing.</p>
+<input id="donor" placeholder="Donor / restaurant name">
+<input id="meal" placeholder="Food name">
+<input id="quantity" placeholder="Quantity (e.g. 10 meals)">
+<button onclick="donate()">Add Listing</button>
+<div id="donation" class="result">Your listing will appear here.</div>
+</section>
+</div>
+</main>
+<footer>FoodBridge AI • Hackathon Prototype • Reduce food waste 🌱</footer>
+
+<script>
+function findLocation(){
+ const out=document.getElementById('location');
+ if(!navigator.geolocation){
+ out.textContent="Location is not supported by this browser.";return;
+ }
+ out.textContent="Requesting location permission...";
+ navigator.geolocation.getCurrentPosition(
+ p=>out.textContent="Latitude: "+p.coords.latitude.toFixed(4)+
+ "\nLongitude: "+p.coords.longitude.toFixed(4),
+ ()=>out.textContent="Location unavailable. Allow location access and try again."
+ );
+}
+function showFood(){
+ let k=document.getElementById('kind').value;
+ let items=[
+ {name:"Community Meal Box",type:"Meals",qty:"10 meals"},
+ {name:"Fresh Fruit Basket",type:"Fruits",qty:"5 baskets"},
+ {name:"Sealed Food Packs",type:"Packaged food",qty:"8 packs"}
+ ];
+ let found=items.filter(x=>k==="All food"||x.type===k);
+ document.getElementById('food').textContent=found.map(x=>
+ x.name+" — "+x.qty+" (SAMPLE LISTING)"
+ ).join("\n")+"\n\nConfirm availability with the donor.";
+}
+function callDonor(){
+ document.getElementById('contact').textContent=
+ "Demo only: donor phone number is not configured. Add a verified contact to enable calling.";
+}
+let stage=0;
+function track(){
+ let states=["Order FB101: Awaiting pickup",
+ "Order FB101: Picked up (DEMO)",
+ "Order FB101: Delivered (DEMO)"];
+ document.getElementById('tracking').textContent=states[stage];
+ stage=(stage+1)%states.length;
+}
+function safety(){
+ let date=document.getElementById('expiry').value;
+ let sealed=document.getElementById('sealed').value;
+ let out=document.getElementById('safe');
+ if(!date||!sealed){out.textContent="Enter expiry date and packaging condition.";return;}
+ let expired=new Date(date+"T23:59:59")<new Date();
+ if(expired||sealed==="no"){
+ out.textContent="WARNING: Do not distribute based on these details. Seek a qualified food-safety check.";
+ }else{
+ out.textContent="Basic checks passed only. This does NOT prove food is safe. Verify storage, freshness, handling and donor details before distribution.";
+ }
+}
+function donate(){
+ let name=document.getElementById('donor').value.trim();
+ let meal=document.getElementById('meal').value.trim();
+ let qty=document.getElementById('quantity').value.trim();
+ if(!name||!meal||!qty){
+ document.getElementById('donation').textContent="Please complete all fields.";return;
+ }
+ document.getElementById('donation').textContent=
+ "SAMPLE LISTING\nDonor: "+name+"\nFood: "+meal+
+ "\nQuantity: "+qty+"\nSaved in this page only; not shared online.";
+}
+</script>
+</body>
+</html>
